@@ -1,6 +1,8 @@
 [submodule "cwm4"]
 	path = cwm4
 	url = https://github.com/CarloWood/cwm4.git
+        branch = master
 [submodule "ai-utils"]
 	path = ai-utils
 	url = https://github.com/CarloWood/ai-utils.git
+        branch = master

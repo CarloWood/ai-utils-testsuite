@@ -12,7 +12,7 @@ dnl Put resulting configuration defines in this header file.
 AC_CONFIG_HEADERS([config.h])
 
 dnl Because we use cwautomacros.
-CW_AUTOMACROS([20160921])
+CW_AUTOMACROS
 
 dnl Automake options.
 AM_INIT_AUTOMAKE
@@ -21,7 +21,7 @@ dnl Include maintainer mode targets
 AM_MAINTAINER_MODE
 
 dnl Check for compiler and preprocessor
-AC_PROG_CC
+AC_PROG_CC_C99
 AC_PROG_CXX
 AC_PROG_CXXCPP
 
@@ -42,10 +42,6 @@ LIBCWD_FLAGS="$CWD_R_FLAGS"
 LIBCWD_LIBS="$CWD_R_LIBS"
 AC_SUBST(LIBCWD_FLAGS)
 AC_SUBST(LIBCWD_LIBS)
-
-dnl Each Makefile.am should use DEFS = @DEFS@. Set DEFS here.
-DEFS="-DHAVE_CONFIG_H"
-AC_SUBST(DEFS)
 
 dnl Suppress warning from ar by supplying U flag.
 AC_SUBST(AR_FLAGS, [cruU])

@@ -1,9 +1,6 @@
-AUTOMAKE_OPTIONS = foreign
+ACLOCAL_AMFLAGS = @ACLOCAL_CWFLAGS@
 
 SUBDIRS = ai-utils
-
-ACLOCAL_AMFLAGS = @ACLOCAL_CWFLAGS@
-AM_CPPFLAGS = -iquote $(top_builddir) -iquote $(srcdir)
 
 MAINTAINERCLEANFILES = \
 	$(srcdir)/aclocal.m4 \

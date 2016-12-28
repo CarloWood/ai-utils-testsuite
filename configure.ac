@@ -15,7 +15,7 @@ dnl Because we use cwautomacros.
 CW_AUTOMACROS
 
 dnl Automake options.
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([foreign])
 
 dnl Include maintainer mode targets
 AM_MAINTAINER_MODE

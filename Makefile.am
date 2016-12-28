@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = @ACLOCAL_CWFLAGS@
 
-SUBDIRS = ai-utils
+SUBDIRS = utils
 
 MAINTAINERCLEANFILES = \
 	$(srcdir)/aclocal.m4 \

@@ -48,7 +48,7 @@ AC_SUBST(AR_FLAGS, [cruU])
 
 AC_CONFIG_FILES(
         [Makefile]
-        [ai-utils/Makefile]
+        [utils/Makefile]
         )
 
 AC_OUTPUT

@@ -14,5 +14,7 @@ m4_include([cwm4/configure_ac_top.m4])
 dnl We use doxygen for documentation.
 CW_DOXYGEN
 
+AC_CONFIG_FILES([src/Makefile])
+
 # Include cwm4 footer.
 m4_include([cwm4/configure_ac_bottom.m4])

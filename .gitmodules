@@ -3,7 +3,7 @@
 	url = https://github.com/CarloWood/cwm4.git
         branch = master
 [submodule "cwd"]
-	path = cwd
+	path = cwds
 	url = https://github.com/CarloWood/cwd.git
         branch = master
 [submodule "ai-utils"]

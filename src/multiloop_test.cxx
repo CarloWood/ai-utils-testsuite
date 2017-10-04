@@ -118,10 +118,11 @@ int main()
           // unless this is the inner loop, in which case the value is ignored.
           ml.start_next_loop_at(ml());
         }
-        if (ml.end_of_loop())
+        int loop = ml.end_of_loop();
+        if (loop >= 0)
         {
           // Other loops end here.
-          expect("e" + std::to_string(*ml - 1) + ",");
+          expect("e" + std::to_string(loop) + ",");
         }
       }
     }

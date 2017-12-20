@@ -8,7 +8,7 @@ manip_test_SOURCES = manip_test.cxx
 
 multiloop_test_SOURCES = multiloop_test.cxx
 
-vector_test_SOURCES = vector.cxx
+vector_test_SOURCES = vector_test.cxx
 
 manip_test_CXXFLAGS = -fmax-errors=1 @LIBCWD_FLAGS@
 manip_test_LDADD = ../utils/libutils.la $(top_builddir)/cwds/libcwds.la

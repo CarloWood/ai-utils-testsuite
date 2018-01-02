@@ -17,4 +17,4 @@ multiloop_test_CXXFLAGS = -fmax-errors=1 @LIBCWD_FLAGS@
 multiloop_test_LDADD = ../utils/libutils.la $(top_builddir)/cwds/libcwds.la
 
 vector_test_CXXFLAGS = -fmax-errors=1 @LIBCWD_FLAGS@
-vector_test_LDADD = ../utils/libutils.la $(top_builddir)/cwds/libcwds.la
+vector_test_LDADD = ../utils/libutils.la ../microbench/libmicrobench.la $(top_builddir)/cwds/libcwds.la

@@ -10,3 +10,7 @@
 	path = cwds
 	url = https://github.com/CarloWood/cwds.git
 	branch = master
+[submodule "microbench"]
+	path = microbench
+	url = https://github.com/CarloWood/microbench.git
+	branch = master

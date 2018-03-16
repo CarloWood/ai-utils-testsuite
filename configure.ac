@@ -22,7 +22,7 @@ define(CW_THREADS, [no])
 m4_include([cwm4/configure_ac_top.m4])
 
 dnl We use doxygen for documentation.
-CW_DOXYGEN
+#CW_DOXYGEN
 
 AC_CONFIG_FILES([src/Makefile])
 

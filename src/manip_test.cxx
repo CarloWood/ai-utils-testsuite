@@ -115,7 +115,7 @@ int main()
   std::cout << "stringstream:\n" << ss.str() << std::endl;
 }
 
-std::ostream& operator<<(std::ostream& os, A const& a)
+std::ostream& operator<<(std::ostream& os, A const& DEBUG_ONLY(a))
 {
   MyObject* my_object{MyObject::ptr(os)};
 

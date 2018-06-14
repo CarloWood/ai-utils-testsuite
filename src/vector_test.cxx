@@ -43,8 +43,10 @@ int main()
 #else
   index_type index{v.iend()};
 #endif
+#ifdef CWDEBUG
   index_type const i99{99};
   index_type const i98{98};
+#endif
 #ifndef NORMAL
   ASSERT(i98.get_value() == 98);
 #endif

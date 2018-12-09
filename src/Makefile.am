@@ -1,6 +1,6 @@
 AM_CPPFLAGS = -iquote $(top_srcdir) -iquote $(top_srcdir)/cwds
 
-noinst_PROGRAMS = refcount_test manip_test multiloop_test vector_test sbll_test pool_test itoa_test
+noinst_PROGRAMS = refcount_test manip_test multiloop_test vector_test sbll_test pool_test itoa_test derived_from_test
 
 refcount_test_SOURCES = refcount_test.cxx
 
@@ -27,3 +27,7 @@ pool_test_LDADD = ../utils/libutils.la ../cwds/libcwds.la
 itoa_test_SOURCES = itoa_test.cxx
 itoa_test_CXXFLAGS = @LIBCWD_FLAGS@
 itoa_test_LDADD = ../utils/libutils.la ../cwds/libcwds.la
+
+derived_from_test_SOURCES = derived_from_test.cxx
+derived_from_test_CXXFLAGS = @LIBCWD_FLAGS@
+derived_from_test_LDADD = ../utils/libutils.la ../cwds/libcwds.la

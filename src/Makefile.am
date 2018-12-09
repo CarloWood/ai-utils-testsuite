@@ -3,6 +3,8 @@ AM_CPPFLAGS = -iquote $(top_srcdir) -iquote $(top_srcdir)/cwds
 noinst_PROGRAMS = refcount_test manip_test multiloop_test vector_test sbll_test pool_test itoa_test derived_from_test
 
 refcount_test_SOURCES = refcount_test.cxx
+refcount_test_CXXFLAGS = @LIBCWD_FLAGS@
+refcount_test_LDADD = ../utils/libutils.la $(top_builddir)/cwds/libcwds.la
 
 manip_test_SOURCES = manip_test.cxx
 manip_test_CXXFLAGS = -fmax-errors=1 @LIBCWD_FLAGS@

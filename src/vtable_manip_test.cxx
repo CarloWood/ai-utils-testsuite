@@ -1,6 +1,6 @@
 #include "sys.h"
 #include "debug.h"
-#include "utils/VT.h"
+#include "utils/VTPtr.h"
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -25,7 +25,7 @@ class B
     static constexpr VT_type VT{g, h, nullptr};
   };
 
-  VTPtr<B> VT_ptr;
+  utils::VTPtr<B> VT_ptr;
 
   int g(int n) { return VT_ptr->_g(this, n); }
   int h(double d) { return VT_ptr->_h(this, d); }
@@ -55,7 +55,7 @@ class D : public B
     static constexpr VT_type VT{g, h, pv, i};
   };
 
-  VTPtr<D, B> VT_ptr;
+  utils::VTPtr<D, B> VT_ptr;
 
  private:
   int m_d;

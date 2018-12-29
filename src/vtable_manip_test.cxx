@@ -25,6 +25,9 @@ class B
     static constexpr VT_type VT{g, h, nullptr};
   };
 
+  // Make a deep copy of VT_ptr.
+  virtual VT_type* clone_VT() { return VT_ptr.clone(this); }
+
   utils::VTPtr<B> VT_ptr;
 
   int g(int n) { return VT_ptr->_g(this, n); }
@@ -54,6 +57,9 @@ class D : public B
 
     static constexpr VT_type VT{g, h, pv, i};
   };
+
+  // Make a deep copy of VT_ptr.
+  VT_type* clone_VT() override { return VT_ptr.clone(this); }
 
   utils::VTPtr<D, B> VT_ptr;
 

@@ -1,6 +1,7 @@
 AM_CPPFLAGS = -iquote $(top_srcdir) -iquote $(top_srcdir)/cwds
 
-noinst_PROGRAMS = refcount_test manip_test multiloop_test vector_test sbll_test pool_test itoa_test vtable_manip_test fuzzybool_test
+noinst_PROGRAMS = refcount_test manip_test multiloop_test vector_test sbll_test \
+		  pool_test itoa_test vtable_manip_test fuzzybool_test benchmark_BitSet
 
 refcount_test_SOURCES = refcount_test.cxx
 refcount_test_CXXFLAGS = @LIBCWD_FLAGS@
@@ -37,3 +38,7 @@ vtable_manip_test_LDADD = ../utils/libutils.la ../cwds/libcwds.la
 fuzzybool_test_SOURCES = fuzzybool_test.cxx
 fuzzybool_test_CXXFLAGS = @LIBCWD_FLAGS@
 fuzzybool_test_LDADD = ../utils/libutils.la ../cwds/libcwds.la
+
+benchmark_BitSet_SOURCES = benchmark_BitSet.cxx
+benchmark_BitSet_CXXFLAGS = -O2 @LIBCWD_R_FLAGS@
+benchmark_BitSet_LDADD = ../utils/libutils_r.la ../cwds/libcwds_r.la

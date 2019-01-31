@@ -11,36 +11,36 @@ FuzzyBool get_fuzzy_bool(int val)
 {
   switch (val)
   {
-    case utils::fuzzy_true:
-      return fuzzy::True;
-    case utils::fuzzy_was_true:
-      return fuzzy::WasTrue;
-    case utils::fuzzy_was_false:
+    case 0:
+      return fuzzy::False;
+    case 1:
       return fuzzy::WasFalse;
-    case utils::fuzzy_false:
+    case 2:
+      return fuzzy::WasTrue;
+    case 3:
       break;
   }
-  return fuzzy::False;
+  return fuzzy::True;
 }
 
-void print_table(std::function<FuzzyBool(FuzzyBool,FuzzyBool)> op)
+void print_table(std::function<FuzzyBool(FuzzyBool const&, FuzzyBool const&)> op)
 {
-  std::cout << std::setw(10) << ' ' << ' ';
+  std::cout << std::setw(15) << ' ' << ' ';
   for (int v1 = 0; v1 < 4; ++v1)
   {
     FuzzyBool fb1 = get_fuzzy_bool(v1);
-    std::cout << " |" << std::setw(10) << fb1;
+    std::cout << " |" << std::setw(15) << fb1;
   }
   std::cout << "\n-----------------------------------------------------------\n";
   for (int v0 = 0; v0 < 4; ++v0)
   {
     FuzzyBool fb0 = get_fuzzy_bool(v0);
-    std::cout << std::setw(10) << fb0 << ' ';
+    std::cout << std::setw(15) << fb0 << ' ';
     for (int v1 = 0; v1 < 4; ++v1)
     {
       FuzzyBool fb1 = get_fuzzy_bool(v1);
 
-      std::cout << " |" << std::setw(10) << op(fb0, fb1);
+      std::cout << " |" << std::setw(15) << op(fb0, fb1);
     }
     std::cout << '\n';
   }
@@ -86,24 +86,24 @@ int main()
   ASSERT((fb4 != False).has_same_value_as(WasFalse));
   ASSERT(fb4.unlikely());
 
-  fb2 = !fb2;
+  fb2 = (!fb2);
   ASSERT(fb2.has_same_value_as(WasFalse));
 
-  fb4 = !fb4;
+  fb4 = (!fb4);
   ASSERT(fb4.has_same_value_as(WasTrue));
 
   Dout(dc::notice, "fb2 = " << fb2 << "; fb4 = " << fb4);
 
   std::cout << "\nIdentity:\n";
-  print_table([](FuzzyBool, FuzzyBool fb2){ return fb2; });
+  print_table([](FuzzyBool const&, FuzzyBool const& fb2){ return fb2; });
   std::cout << "\nLogical NOT:\n";
-  print_table([](FuzzyBool, FuzzyBool fb2){ ASSERT((!!fb2).has_same_value_as(fb2)); return !fb2; });
+  print_table([](FuzzyBool const&, FuzzyBool const& fb2){ ASSERT((!!fb2).has_same_value_as(fb2)); return (!fb2); });
   std::cout << "\nLogical AND:\n";
-  print_table([](FuzzyBool fb1, FuzzyBool fb2){ return fb1 && fb2; });
+  print_table([](FuzzyBool const& fb1, FuzzyBool const& fb2){ return (fb1 && fb2); });
   std::cout << "\nLogical OR:\n";
-  print_table([](FuzzyBool fb1, FuzzyBool fb2){ ASSERT((!(!fb1 && !fb2)).has_same_value_as(fb1 || fb2)); return fb1 || fb2; });
+  print_table([](FuzzyBool const& fb1, FuzzyBool const& fb2){ ASSERT((!(!fb1 && !fb2)).has_same_value_as(fb1 || fb2)); return (fb1 || fb2); });
   std::cout << "\nOperator !=:\n";
-  print_table([](FuzzyBool fb1, FuzzyBool fb2){ ASSERT(((fb1 && !fb2) || (!fb1 && fb2)).has_same_value_as(fb1 != fb2)); return fb1 != fb2; });
+  print_table([](FuzzyBool const& fb1, FuzzyBool const& fb2){ ASSERT(((fb1 && !fb2) || (!fb1 && fb2)).has_same_value_as(fb1 != fb2)); return (fb1 != fb2); });
   std::cout << "\nOperator ==:\n";
-  print_table([](FuzzyBool fb1, FuzzyBool fb2){ ASSERT((!(fb1 != fb2)).has_same_value_as(fb1 == fb2)); return fb1 == fb2; });
+  print_table([](FuzzyBool const& fb1, FuzzyBool const& fb2){ ASSERT((!(fb1 != fb2)).has_same_value_as(fb1 == fb2)); return (fb1 == fb2); });
 }

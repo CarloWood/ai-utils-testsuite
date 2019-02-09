@@ -48,6 +48,14 @@ void print_table(std::function<FuzzyBool(FuzzyBool const&, FuzzyBool const&)> op
   }
 }
 
+bool equal(AtomicFuzzyBool const& fb1, AtomicFuzzyBool const& fb2)
+{
+  return (fb1.is_true() && fb2.is_true()) ||
+         (fb1.is_transitory_true() && fb2.is_transitory_true()) ||
+         (fb1.is_transitory_false() && fb2.is_transitory_false()) ||
+         (fb1.is_false() && fb2.is_false());
+}
+
 int main()
 {
   Debug(NAMESPACE_DEBUG::init());
@@ -75,41 +83,41 @@ int main()
   // Special cases.
   using namespace fuzzy;
   ASSERT(fb2 == True);
-  ASSERT(fb2.likely());
+  ASSERT(fb2.is_momentary_true());
   fb2 = WasTrue;
-  ASSERT((fb2 == WasTrue).has_same_value_as(WasTrue));
-  ASSERT((fb2 != True).has_same_value_as(WasFalse));
-  ASSERT(fb2.likely());
+  ASSERT((fb2 == WasTrue).is_transitory_true());
+  ASSERT((fb2 != True).is_transitory_false());
+  ASSERT(fb2.is_momentary_true());
 
   ASSERT(fb4 == False);
-  ASSERT(fb4.unlikely());
+  ASSERT(fb4.is_momentary_false());
   fb4 = WasFalse;
-  ASSERT((fb4 == WasFalse).has_same_value_as(WasTrue));
-  ASSERT((fb4 != False).has_same_value_as(WasFalse));
-  ASSERT(fb4.unlikely());
+  ASSERT((fb4 == WasFalse).is_transitory_true());
+  ASSERT((fb4 != False).is_transitory_false());
+  ASSERT(fb4.is_momentary_false());
 
   fb2 = !fb2.load();
-  ASSERT(fb2.has_same_value_as(WasFalse));
+  ASSERT(fb2.is_transitory_false());
 
   fb4 = !fb4.load();
-  ASSERT(fb4.has_same_value_as(WasTrue));
+  ASSERT(fb4.is_transitory_true());
 
   Dout(dc::notice, "fb2 = " << fb2 << "; fb4 = " << fb4);
 
   std::cout << "\nIdentity:\n";
   print_table([](FuzzyBool const&, FuzzyBool const& fb2){
       AtomicFuzzyBool afb = fb2;
-      ASSERT(afb.has_same_value_as(fb2));
+      ASSERT(equal(afb, fb2));
       return afb.load();
   });
 
   std::cout << "\nLogical NOT:\n";
   print_table([](FuzzyBool const&, FuzzyBool const& fb2){
-      ASSERT((!!fb2).has_same_value_as(fb2));
+      ASSERT(equal(!!fb2, fb2));
       AtomicFuzzyBool afb = fb2;
       FuzzyBool old = afb.fetch_invert();
-      ASSERT(afb.has_same_value_as(!fb2));
-      ASSERT(old.has_same_value_as(fb2));
+      ASSERT(equal(afb, !fb2));
+      ASSERT(equal(old, fb2));
       return afb.load();
   });
 
@@ -117,38 +125,38 @@ int main()
   print_table([](FuzzyBool const& fb1, FuzzyBool const& fb2){
       AtomicFuzzyBool afb = fb1;
       FuzzyBool old = afb.fetch_AND(fb2);
-      ASSERT(afb.has_same_value_as(fb1 && fb2));
-      ASSERT(old.has_same_value_as(fb1));
+      ASSERT(equal(afb, fb1 && fb2));
+      ASSERT(equal(old, fb1));
       return afb.load();
   });
 
   std::cout << "\nLogical OR:\n";
   print_table([](FuzzyBool const& fb1, FuzzyBool const& fb2){
-      ASSERT((!(!fb1 && !fb2)).has_same_value_as(fb1 || fb2));
+      ASSERT(equal(!(!fb1 && !fb2), fb1 || fb2));
       AtomicFuzzyBool afb = fb1;
       FuzzyBool old = afb.fetch_OR(fb2);
-      ASSERT(afb.has_same_value_as(fb1 || fb2));
-      ASSERT(old.has_same_value_as(fb1));
+      ASSERT(equal(afb, fb1 || fb2));
+      ASSERT(equal(old, fb1));
       return afb.load();
   });
 
   std::cout << "\nLogical XOR:\n";
   print_table([](FuzzyBool const& fb1, FuzzyBool const& fb2){
-      ASSERT(((fb1 && !fb2) || (!fb1 && fb2)).has_same_value_as(fb1 != fb2));
+      ASSERT(equal((fb1 && !fb2) || (!fb1 && fb2), fb1 != fb2));
       AtomicFuzzyBool afb = fb1;
       FuzzyBool old = afb.fetch_XOR(fb2);
-      ASSERT(afb.has_same_value_as(fb1 != fb2));
-      ASSERT(old.has_same_value_as(fb1));
+      ASSERT(equal(afb, fb1 != fb2));
+      ASSERT(equal(old, fb1));
       return afb.load();
   });
 
   std::cout << "\nLogical NOT XOR:\n";
   print_table([](FuzzyBool const& fb1, FuzzyBool const& fb2){
-      ASSERT((!(fb1 != fb2)).has_same_value_as(fb1 == fb2));
+      ASSERT(equal(!(fb1 != fb2), fb1 == fb2));
       AtomicFuzzyBool afb = fb1;
       FuzzyBool old = afb.fetch_NOT_XOR(fb2);
-      ASSERT(afb.has_same_value_as(fb1 == fb2));
-      ASSERT(old.has_same_value_as(fb1));
+      ASSERT(equal(afb, fb1 == fb2));
+      ASSERT(equal(old, fb1));
       return afb.load();
   });
 }

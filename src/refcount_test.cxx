@@ -10,21 +10,27 @@ struct Test : public AIRefCount {
   Test(Test const& foo) : AIRefCount(foo) { std::cout << "Copy constructed" << std::endl; }
   ~Test() { m_magic = 0; std::cout << "Destructed" << std::endl; }
   char const* test() const { return m_magic == 0x12345678 ? "OK!" : "DELETED!"; }
+  int ref_count()
+  {
+    int result = inhibit_deletion();
+    allow_deletion();
+    return result;
+  }
 };
 
 int main()
 {
   boost::intrusive_ptr<Test> p1 = new Test;
-  assert(p1->unique() && p1->ref_count() == 1);
+  assert(p1->unique().is_true() && p1->ref_count());
 
   boost::intrusive_ptr<Test> p2 = p1;
   {
     boost::intrusive_ptr<Test> p3(p1);
-    assert(!p1->unique() && p3->ref_count() == 3);
+    assert(p1->unique().is_momentary_false() && p3->ref_count() == 3);
     p2.reset();
-    assert(!p1->unique() && p3->ref_count() == 2);
+    assert(p1->unique().is_momentary_false() && p3->ref_count() == 2);
   }
-  assert(p1->unique() && p1->ref_count() == 1);
+  assert(p1->unique().is_true() && p1->ref_count() == 1);
 
   Test* p = p1.get();
   p2 = p;
@@ -46,7 +52,7 @@ int main()
   assert(q2->ref_count() == 3);     // swapped with p2
 
   boost::intrusive_ptr<Test> r1 = new Test(*p);
-  assert(r1->unique());
+  assert(r1->unique().is_true());
   // No change:
   assert(p1->ref_count() == 3);
   assert(p2->ref_count() == 2);

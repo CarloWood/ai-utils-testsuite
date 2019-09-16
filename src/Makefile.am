@@ -2,23 +2,27 @@ AM_CPPFLAGS = -iquote $(top_srcdir) -iquote $(top_srcdir)/cwds
 
 noinst_PROGRAMS = refcount_test manip_test multiloop_test vector_test sbll_test \
 		  pool_test itoa_test vtable_manip_test fuzzybool_test atomicfuzzybool_test \
-		  benchmark_BitSet random_hash_test
+		  benchmark_BitSet random_hash_test deque_allocator_test memory_test
+
+memory_test_SOURCES = memory_test.cxx
+memory_test_CXXFLAGS = -O2 @LIBCWD_R_FLAGS@
+memory_test_LDADD = ../utils/libutils_r.la ../cwds/libcwds_r.la -lboost_system -lboost_thread
 
 refcount_test_SOURCES = refcount_test.cxx
 refcount_test_CXXFLAGS = @LIBCWD_FLAGS@
-refcount_test_LDADD = ../utils/libutils.la $(top_builddir)/cwds/libcwds.la
+refcount_test_LDADD = ../utils/libutils.la ../cwds/libcwds.la
 
 manip_test_SOURCES = manip_test.cxx
 manip_test_CXXFLAGS = -fmax-errors=1 @LIBCWD_FLAGS@
-manip_test_LDADD = ../utils/libutils.la $(top_builddir)/cwds/libcwds.la
+manip_test_LDADD = ../utils/libutils.la ../cwds/libcwds.la
 
 multiloop_test_SOURCES = multiloop_test.cxx
 multiloop_test_CXXFLAGS = -fmax-errors=1 @LIBCWD_FLAGS@
-multiloop_test_LDADD = ../utils/libutils.la $(top_builddir)/cwds/libcwds.la
+multiloop_test_LDADD = ../utils/libutils.la ../cwds/libcwds.la
 
 vector_test_SOURCES = vector_test.cxx
 vector_test_CXXFLAGS = -fmax-errors=1 @LIBCWD_FLAGS@
-vector_test_LDADD = ../utils/libutils.la ../microbench/libmicrobench.la $(top_builddir)/cwds/libcwds.la
+vector_test_LDADD = ../utils/libutils.la ../microbench/libmicrobench.la ../cwds/libcwds.la
 
 sbll_test_SOURCES = sbll_test.cxx
 sbll_test_CXXFLAGS = @LIBCWD_FLAGS@
@@ -51,3 +55,7 @@ benchmark_BitSet_LDADD = ../utils/libutils_r.la ../cwds/libcwds_r.la
 random_hash_test_SOURCES = random_hash_test.cxx
 random_hash_test_CXXFLAGS = -O2 @LIBCWD_R_FLAGS@
 random_hash_test_LDADD = ../utils/libutils_r.la ../cwds/libcwds_r.la
+
+deque_allocator_test_SOURCES = deque_allocator_test.cxx
+deque_allocator_test_CXXFLAGS = -O0 @LIBCWD_R_FLAGS@
+deque_allocator_test_LDADD = ../utils/libutils_r.la ../cwds/libcwds_r.la

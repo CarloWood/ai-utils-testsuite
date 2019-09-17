@@ -57,5 +57,5 @@ random_hash_test_CXXFLAGS = -O2 @LIBCWD_R_FLAGS@
 random_hash_test_LDADD = ../utils/libutils_r.la ../cwds/libcwds_r.la
 
 deque_allocator_test_SOURCES = deque_allocator_test.cxx
-deque_allocator_test_CXXFLAGS = -O0 @LIBCWD_R_FLAGS@
+deque_allocator_test_CXXFLAGS = -O2 @LIBCWD_R_FLAGS@
 deque_allocator_test_LDADD = ../utils/libutils_r.la ../cwds/libcwds_r.la

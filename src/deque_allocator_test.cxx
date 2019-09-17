@@ -1,6 +1,5 @@
 #include "sys.h"
-#include "utils/MemoryPagePool.h"
-#include "utils/SimpleSegregatedStorage.h"
+#include "utils/NodeMemoryResource.h"
 #include <deque>
 #include <cstdlib>
 #include <new>
@@ -16,49 +15,34 @@ static constexpr size_t glibcxx_deque_buf_size =
 #endif
   ;
 
-static utils::MemoryPagePool<0x1000> s_deque_memory_page_pool;       // Returns blocks of 0x1000 bytes.
-
 template<typename T>
 struct DequePoolAllocator
 {
   using value_type = T;
   using map_pointer_type = T*;
 
-  DequePoolAllocator() = default;
-  DequePoolAllocator(DequePoolAllocator const&) { }
+  DequePoolAllocator(utils::NodeMemoryResource& nmr) : m_nmr(&nmr) { }
+  DequePoolAllocator(DequePoolAllocator const&) = default;
 
   // This allocator also supports allocating blocks with map_pointer_type's, for which we use a normal std::allocator.
-  operator std::allocator<map_pointer_type> const&() const noexcept { return m_deque_map_alloc; }
+  operator std::allocator<map_pointer_type> const() const noexcept { return {}; }
   template<typename U> struct rebind { using other = std::conditional_t<std::is_same_v<U, T>, DequePoolAllocator<T>, std::allocator<U>>; };
 
   [[nodiscard]] T* allocate(std::size_t n)
   {
-//    Dout(dc::notice, "Calling DequePoolAllocator<" << libcwd::type_info_of<T>().demangled_name() << ">::allocate(" << n << ")");
+    //Dout(dc::notice, "Calling DequePoolAllocator<" << libcwd::type_info_of<T>().demangled_name() << ">::allocate(" << n << ")");
     ASSERT(n <= glibcxx_deque_buf_size / sizeof(T));
-    if (auto p = static_cast<T*>(m_sss.allocate([this](){ return add_block(); })))
-      return p;
-    throw std::bad_alloc();
+    return static_cast<T*>(m_nmr->allocate(glibcxx_deque_buf_size));
   }
 
-  void deallocate(T* p, std::size_t n) noexcept
+  void deallocate(T* p, std::size_t UNUSED_ARG(n)) noexcept
   {
-//    Dout(dc::notice, "Calling DequePoolAllocator<" << libcwd::type_info_of<T>().demangled_name() << ">::deallocate(" << p << ", " << n << ")");
-    m_sss.deallocate(p);
-  }
-
- protected:
-  bool add_block()
-  {
-    void* const ptr = s_deque_memory_page_pool.allocate();
-    if (AI_UNLIKELY(ptr == nullptr))
-      return false;
-    m_sss.add_block(ptr, s_deque_memory_page_pool.block_size(), glibcxx_deque_buf_size);
-    return true;
+    //Dout(dc::notice, "Calling DequePoolAllocator<" << libcwd::type_info_of<T>().demangled_name() << ">::deallocate(" << p << ", " << n << ")");
+    m_nmr->deallocate(p);
   }
 
  private:
-  utils::SimpleSegregatedStorage m_sss;
-  std::allocator<map_pointer_type> m_deque_map_alloc;
+  utils::NodeMemoryResource* m_nmr;
 };
 
 template<typename T>
@@ -79,9 +63,11 @@ int main()
 
   AIStatefulTask* ptr = nullptr;
 
-  DequePoolAllocator<AIStatefulTask*> alloc;
+  utils::MemoryPagePool mpp(0x8000);
+  utils::NodeMemoryResource nmr(mpp);
+  DequePoolAllocator<AIStatefulTask*> alloc(nmr);
   {
-    std::deque<AIStatefulTask*, DequePoolAllocator<AIStatefulTask*>> test_deque(alloc);
+    std::deque<AIStatefulTask*, decltype(alloc)> test_deque(alloc);
 
     for (int n = 0; n < 10000; ++n)
       test_deque.push_back(ptr);

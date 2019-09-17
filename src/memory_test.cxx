@@ -9,7 +9,7 @@ int const iterations = 1000000;
 int const producer_thread_count = 4;
 int const consumer_thread_count = 4;
 int const total_threads = producer_thread_count + consumer_thread_count;
-utils::MemoryPagePool<0x1000> mpp(2, 1024 * 1024);
+utils::MemoryPagePool mpp(0x1000, 2, 1024 * 1024);
 
 std::mutex cvm;
 std::condition_variable cv;

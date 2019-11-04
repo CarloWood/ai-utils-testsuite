@@ -2,7 +2,8 @@ AM_CPPFLAGS = -iquote $(top_srcdir) -iquote $(top_srcdir)/cwds
 
 noinst_PROGRAMS = refcount_test manip_test multiloop_test vector_test sbll_test \
 		  pool_test itoa_test vtable_manip_test fuzzybool_test atomicfuzzybool_test \
-		  benchmark_BitSet random_hash_test deque_allocator_test memory_test print_using
+		  benchmark_BitSet random_hash_test deque_allocator_test memory_test print_using \
+		  is_pointer_like
 
 memory_test_SOURCES = memory_test.cxx
 memory_test_CXXFLAGS = -O2 @LIBCWD_R_FLAGS@
@@ -63,3 +64,7 @@ deque_allocator_test_LDADD = ../utils/libutils_r.la ../cwds/libcwds_r.la
 print_using_SOURCES = print_using.cxx
 print_using_CXXFLAGS = @LIBCWD_FLAGS@
 print_using_LDADD = ../utils/libutils.la ../cwds/libcwds.la
+
+is_pointer_like_SOURCES = is_pointer_like.cxx
+is_pointer_like_CXXFLAGS = @LIBCWD_FLAGS@
+is_pointer_like_LDADD = ../utils/libutils.la ../cwds/libcwds.la

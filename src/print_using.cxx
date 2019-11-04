@@ -55,4 +55,7 @@ int main()
   Dout(dc::notice, print_using(3.14, print_on));
   f(a);
   Dout(dc::notice, print_using(foo, &Foo::print_on));
+
+  std::shared_ptr<Foo> ptr = std::make_shared<Foo>();
+  Dout(dc::notice, print_using(ptr, &Foo::print_on));
 }

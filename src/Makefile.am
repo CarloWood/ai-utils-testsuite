@@ -1,6 +1,6 @@
 AM_CPPFLAGS = -iquote $(top_srcdir) -iquote $(top_srcdir)/cwds
 
-noinst_PROGRAMS = refcount_test manip_test multiloop_test vector_test sbll_test \
+noinst_PROGRAMS = refcount_test manip_test multiloop_test vector_test \
 		  pool_test itoa_test vtable_manip_test fuzzybool_test atomicfuzzybool_test \
 		  benchmark_BitSet random_hash_test deque_allocator_test memory_test print_using \
 		  is_pointer_like
@@ -24,10 +24,6 @@ multiloop_test_LDADD = ../utils/libutils.la ../cwds/libcwds.la
 vector_test_SOURCES = vector_test.cxx
 vector_test_CXXFLAGS = -fmax-errors=1 @LIBCWD_FLAGS@
 vector_test_LDADD = ../utils/libutils.la ../microbench/libmicrobench.la ../cwds/libcwds.la
-
-sbll_test_SOURCES = sbll_test.cxx
-sbll_test_CXXFLAGS = @LIBCWD_FLAGS@
-sbll_test_LDADD = ../utils/libutils.la ../cwds/libcwds.la
 
 pool_test_SOURCES = pool_test.cxx
 pool_test_CXXFLAGS = @LIBCWD_FLAGS@

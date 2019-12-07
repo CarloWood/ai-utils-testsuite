@@ -38,7 +38,7 @@ void test(F foo)
   DoutEntering(dc::notice, "test<" << libcwd::type_info_of<F>().demangled_name() << ">");
   Dout(dc::notice, print_using(foo, print_on));                                                 // Using the global function.
   Dout(dc::notice, print_using(foo, &Foo::print_on));                                           // Using a member function.
-  Dout(dc::notice, print_using(foo, [](std::ostream& os, Foo const&){ os << "lambda"; }));      // Using a lambda.
+//  Dout(dc::notice, print_using(foo, [](std::ostream& os, Foo const&){ os << "lambda"; }));      // Using a lambda.
 }
 
 int main()

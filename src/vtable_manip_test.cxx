@@ -55,7 +55,7 @@ class D : public B
     static int pv(B* self, int x, int y) { return static_cast<D*>(self)->m_d + x + y; }        // Implement pure virtual.
     static char const* i(char const* p, size_t n) { return p + n; }                            // New virtual function.
 
-    static constexpr VT_type VT{g, h, pv, i};
+    static constexpr VT_type VT{{g, h, pv}, i};
   };
 
   // Make a deep copy of VT_ptr.

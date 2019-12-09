@@ -1,2 +1,63 @@
+# Add the local cmake directory to CMAKE_MODULE_PATH.
+list( APPEND CMAKE_MODULE_PATH
+      "${CMAKE_CURRENT_SOURCE_DIR}/../cwm4/cmake" )
+
+include(AICxxProject)
+
+#==============================================================================
+# DEPENDENCIES
+#
+
+# memory_test.cxx uses Boost::thread.
+find_package( Boost COMPONENTS thread )
+
+add_executable( atomicfuzzybool_test atomicfuzzybool_test.cxx )
+target_link_libraries( atomicfuzzybool_test PRIVATE ${AICXX_OBJECTS_LIST} )
+
+add_executable( benchmark_BitSet )
+target_sources( benchmark_BitSet PRIVATE benchmark_BitSet.cxx )
+message(STATUS "AICXX_OBJECTS_LIST = \"${AICXX_OBJECTS_LIST}\"")
+target_link_libraries( benchmark_BitSet PRIVATE ${AICXX_OBJECTS_LIST} )
+
+add_executable( deque_allocator_test deque_allocator_test.cxx )
+target_link_libraries( deque_allocator_test PRIVATE ${AICXX_OBJECTS_LIST} )
+
 add_executable( fuzzybool_test fuzzybool_test.cxx )
-target_link_libraries( fuzzybool_test utils_ObjLib )
+target_link_libraries( fuzzybool_test PRIVATE ${AICXX_OBJECTS_LIST} )
+
+add_executable( is_pointer_like is_pointer_like.cxx )
+target_link_libraries( is_pointer_like PRIVATE ${AICXX_OBJECTS_LIST} )
+
+add_executable( itoa_test itoa_test.cxx )
+target_link_libraries( itoa_test PRIVATE ${AICXX_OBJECTS_LIST} )
+
+add_executable( manip_test manip_test.cxx )
+target_link_libraries( manip_test PRIVATE ${AICXX_OBJECTS_LIST} )
+
+if ( Boost_THREAD_FOUND )
+  add_executable( memory_test memory_test.cxx )
+  target_link_libraries( memory_test PRIVATE ${AICXX_OBJECTS_LIST} Boost::thread )
+endif()
+
+add_executable( multiloop_test multiloop_test.cxx )
+target_link_libraries( multiloop_test PRIVATE ${AICXX_OBJECTS_LIST} )
+
+add_executable( pool_test pool_test.cxx )
+target_link_libraries( pool_test PRIVATE ${AICXX_OBJECTS_LIST} )
+
+add_executable( print_using print_using.cxx )
+target_link_libraries( print_using PRIVATE ${AICXX_OBJECTS_LIST} )
+
+add_executable( random_hash_test random_hash_test.cxx )
+target_link_libraries( random_hash_test PRIVATE ${AICXX_OBJECTS_LIST} )
+
+add_executable( refcount_test refcount_test.cxx )
+target_link_libraries( refcount_test PRIVATE ${AICXX_OBJECTS_LIST} )
+
+if ( TARGET MoodyCamel::microbench )
+  add_executable( vector_test vector_test.cxx )
+  target_link_libraries( vector_test PRIVATE ${AICXX_OBJECTS_LIST} MoodyCamel::microbench )
+endif ()
+
+add_executable( vtable_manip_test vtable_manip_test.cxx )
+target_link_libraries( vtable_manip_test PRIVATE ${AICXX_OBJECTS_LIST} )

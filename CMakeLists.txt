@@ -1,5 +1,14 @@
-cmake_minimum_required( VERSION 3.16 )
-project( ai-utils CXX )
+cmake_minimum_required( VERSION 3.9 )
+project( ai-utils-testsuite
+         LANGUAGES CXX
+         DESCRIPTION "Testsuite for git submodule ai-utils." )
 
+#Exit if someone tries to contaminates the source directory with an in-source build.
+if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+  message (FATAL_ERROR "Please do out-of-source builds.\nCleanup: \"rm -rf CMake CMakeCache.txt CMakeFiles/\"")
+endif()
+
+add_subdirectory(cwds)
 add_subdirectory(utils)
+add_subdirectory(microbench)
 add_subdirectory(src)

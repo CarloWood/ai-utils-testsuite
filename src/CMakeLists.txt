@@ -4,18 +4,14 @@ list( APPEND CMAKE_MODULE_PATH
 
 include(AICxxProject)
 
-#==============================================================================
-# DEPENDENCIES
-#
-
-# memory_test.cxx uses Boost::thread.
-find_package( Boost COMPONENTS thread )
-
 add_executable( atomicfuzzybool_test atomicfuzzybool_test.cxx )
 target_link_libraries( atomicfuzzybool_test PRIVATE ${AICXX_OBJECTS_LIST} )
 
 add_executable( benchmark_BitSet )
 target_sources( benchmark_BitSet PRIVATE benchmark_BitSet.cxx )
+if ( CW_BUILD_TYPE_IS_DEBUG )
+  target_compile_options( benchmark_BitSet PRIVATE "-O2" )
+endif()
 message(STATUS "AICXX_OBJECTS_LIST = \"${AICXX_OBJECTS_LIST}\"")
 target_link_libraries( benchmark_BitSet PRIVATE ${AICXX_OBJECTS_LIST} )
 
@@ -34,8 +30,12 @@ target_link_libraries( itoa_test PRIVATE ${AICXX_OBJECTS_LIST} )
 add_executable( manip_test manip_test.cxx )
 target_link_libraries( manip_test PRIVATE ${AICXX_OBJECTS_LIST} )
 
+find_package( Boost COMPONENTS thread )
 if ( Boost_THREAD_FOUND )
   add_executable( memory_test memory_test.cxx )
+  if ( CW_BUILD_TYPE_IS_DEBUG )
+    target_compile_options( memory_test PRIVATE "-O2" )
+  endif()
   target_link_libraries( memory_test PRIVATE ${AICXX_OBJECTS_LIST} Boost::thread )
 endif()
 

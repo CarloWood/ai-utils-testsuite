@@ -4,6 +4,9 @@ list( APPEND CMAKE_MODULE_PATH
 
 include(AICxxProject)
 
+add_executable( dictionary_test dictionary_test.cxx )
+target_link_libraries( dictionary_test PRIVATE ${AICXX_OBJECTS_LIST} )
+
 add_executable( atomicfuzzybool_test atomicfuzzybool_test.cxx )
 target_link_libraries( atomicfuzzybool_test PRIVATE ${AICXX_OBJECTS_LIST} )
 

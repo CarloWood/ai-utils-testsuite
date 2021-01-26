@@ -38,7 +38,7 @@ int main()
 {
   Debug(debug::init());
 
-  utils::Dictionary<enum_type, container_type, index_type> dictionary;
+  utils::DictionaryData<enum_type, container_type, index_type> dictionary;
 
   index_type i1{1};
   Data const data1(i1, "ONE");

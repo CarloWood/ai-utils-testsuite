@@ -1,7 +1,3 @@
-# Add the local cmake directory to CMAKE_MODULE_PATH.
-list(APPEND CMAKE_MODULE_PATH
-     "${CMAKE_CURRENT_SOURCE_DIR}/../cwm4/cmake")
-
 include(AICxxProject)
 
 add_executable(c_escape_test c_escape_test.cxx)

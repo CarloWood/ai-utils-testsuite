@@ -48,7 +48,15 @@ int main()
   dictionary.add(e2, "two", {index_type{2}, "two"});
 
   index_type i2 = dictionary.index("two");
-  index_type i3 = dictionary.index("three");
+  index_type i3;
+  try
+  {
+    i3 = dictionary.index("three");
+  }
+  catch (utils::DictionaryBase::NonExistingWord const&)
+  {
+    i3 = dictionary.add_extra_word("three");
+  }
 
   if (i2 == index_type{e2})
     std::cout << "Comparing is possible.\n";

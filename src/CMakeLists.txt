@@ -1,5 +1,8 @@
 include(AICxxProject)
 
+add_executable(register_test register_test.cxx)
+target_link_libraries(register_test PRIVATE ${AICXX_OBJECTS_LIST})
+
 add_executable(c_escape_test c_escape_test.cxx)
 target_link_libraries(c_escape_test PRIVATE ${AICXX_OBJECTS_LIST})
 

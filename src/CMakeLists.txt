@@ -1,5 +1,8 @@
 include(AICxxProject)
 
+add_executable(pointer_hash_test pointer_hash_test.cxx)
+target_link_libraries(pointer_hash_test PRIVATE ${AICXX_OBJECTS_LIST})
+
 add_executable(color_pool_test color_pool_test.cxx)
 target_link_libraries(color_pool_test PRIVATE ${AICXX_OBJECTS_LIST})
 

@@ -4,6 +4,8 @@
 #include <iostream>
 #include <exception>
 
+void run_test(MultiLoop& ml, MultiLoopState const& state);
+
 std::string digest;
 
 void expect(std::string str)
@@ -70,11 +72,26 @@ int main()
     digest += "e0,";
   }
 
+  // Try using a pre-existing, default constructed, MultiLoop.
+  MultiLoop ml;
+  MultiLoopState state;
+  {
+    // Now create the initial MultiLoop and copy its state into ml.
+    MultiLoop ml2(4);
+    state = ml2.state();
+  }
+  run_test(ml, state);
+  std::cout << "Finished" << std::endl;
+}
+
+void run_test(MultiLoop& ml, MultiLoopState const& state)
+{
+  // Initialize the MultiLoop with an internal state.
   for (;;)
   {
     try
     {
-      for (MultiLoop ml(4); !ml.finished(); ml.next_loop()) // Have 4 for loops inside eachother.
+      for (ml = state; !ml.finished(); ml.next_loop()) // Have 4 for loops inside eachother.
       {
         // *ml : loop number, in the range [0, 4].
         // ml(): value of the current loop counter.

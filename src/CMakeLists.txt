@@ -1,5 +1,8 @@
 include(AICxxProject)
 
+add_executable(utf8_string_to_filename_test utf8_string_to_filename_test.cxx)
+target_link_libraries(utf8_string_to_filename_test PRIVATE ${AICXX_OBJECTS_LIST})
+
 add_executable(pointer_hash_test pointer_hash_test.cxx)
 target_link_libraries(pointer_hash_test PRIVATE ${AICXX_OBJECTS_LIST})
 

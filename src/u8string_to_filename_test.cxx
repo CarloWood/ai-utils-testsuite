@@ -1,4 +1,4 @@
-#include "utils/utf8_string_to_filename.h"
+#include "utils/u8string_to_filename.h"
 #include <iostream>
 #include <cassert>
 
@@ -12,11 +12,11 @@ int main()
   }
   std::cout << '\n';
 
-  auto fn = utils::utf8_string_to_filename(msg);
+  auto fn = utils::u8string_to_filename(msg);
 
   std::cout << "Encoded: " << fn << '\n';
 
-  auto decoded = utils::utf8_filename_to_string(fn);
+  auto decoded = utils::filename_to_u8string(fn);
   std::cout << "Decoded: \"" << (char const*)decoded.c_str() << "\"\n";
 
   for (char8_t c : decoded)
@@ -93,9 +93,35 @@ int main()
   std::u8string const input = u8"abcdefghijklmnopqrABCDEFGHIJKLMNOP";
 
   std::cout << "Input: " << (char const*)input.c_str() << '\n';
-  auto fn2 = utils::utf8_string_to_filename(input, illegal, from, to);
+  auto fn2 = utils::u8string_to_filename(input, illegal, from, to);
   std::cout << "Encoded: " << fn2 << '\n';
-  auto decoded2 = utils::utf8_filename_to_string(fn2, to, from);
+  auto decoded2 = utils::filename_to_u8string(fn2, to, from);
   std::cout << "Decoded: \"" << (char const*)decoded2.c_str() << "\"\n";
   assert(decoded2 == input);
+
+  // Next test if we can convert the escape character and/or translate characters from it, or into it.
+  struct Test {
+    std::u8string from;
+    std::u8string to;
+    std::u8string expected;
+  };
+  std::u8string in = u8"a%!/%%42!43%44";
+  Test tests[] = {
+    { u8"",   u8"",   u8"a%%!%2F%%%%42!43%%44" },
+    { u8"%",  u8"!",  u8"a!%21%2F!!42%2143!44" },
+    { u8"!",  u8"%",  u8"a%%%21%2F%%%%42%2143%%44" },
+    { u8"%!", u8"!%", u8"a!%21%2F!!42%2143!44" }
+  };
+  std::cout << "Input: " << (char const*)in.c_str() << '\n';
+  for (Test const& test : tests)
+  {
+    auto encoded = utils::u8string_to_filename(in, u8"/", test.from, test.to);
+    std::cout << "Translation: \"" << (char const*)test.from.c_str() << "\" --> \"" << (char const*)test.to.c_str() << "\"" <<
+      "; expected: \"" << (char const*)test.expected.c_str() << "\"; encoded: " << encoded << std::endl;
+    assert(encoded.u8string() == test.expected);
+    auto decoded = utils::filename_to_u8string(encoded, test.to, test.from);
+    if (decoded != in)
+      std::cout << "Decoded: " << (char const*)decoded.c_str() << std::endl;
+    assert(decoded == in);
+  }
 }

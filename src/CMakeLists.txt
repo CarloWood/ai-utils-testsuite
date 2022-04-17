@@ -1,5 +1,11 @@
 include(AICxxProject)
 
+add_executable(UltraHash_test UltraHash_test.cxx)
+if (CW_BUILD_TYPE_IS_DEBUG)
+  target_compile_options(UltraHash_test PRIVATE "-O2")
+endif()
+target_link_libraries(UltraHash_test PRIVATE ${AICXX_OBJECTS_LIST})
+
 add_executable(u8string_to_filename_test u8string_to_filename_test.cxx)
 target_link_libraries(u8string_to_filename_test PRIVATE ${AICXX_OBJECTS_LIST})
 

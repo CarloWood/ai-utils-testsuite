@@ -1,5 +1,8 @@
 include(AICxxProject)
 
+add_executable(signal_test signal_test.cxx)
+target_link_libraries(signal_test PRIVATE ${AICXX_OBJECTS_LIST})
+
 add_executable(UltraHash_test UltraHash_test.cxx)
 if (CW_BUILD_TYPE_IS_DEBUG)
   target_compile_options(UltraHash_test PRIVATE "-O2")

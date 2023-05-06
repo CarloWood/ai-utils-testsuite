@@ -43,7 +43,7 @@ int main()
 #else
   index_type index{v.iend()};
 #endif
-#ifdef CWDEBUG
+#if CW_DEBUG
   index_type const i99{99};
   index_type const i98{98};
 #endif

@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <cstring>
+#include <random>
 
 unsigned int seed = 4321;
 
@@ -40,7 +41,9 @@ void test1()
   std::vector<unsigned int> index(ptrs.size());
   for (unsigned int i = 0; i < ptrs.size(); ++i)
     index[i] = i;
-  std::random_shuffle(index.begin(), index.end());
+  std::random_device rd;
+  std::mt19937 g(rd());
+  std::shuffle(index.begin(), index.end(), g);
   for (unsigned int i = 0; i < ptrs.size(); ++i)
     pool.free(ptrs[index[i]]);
 

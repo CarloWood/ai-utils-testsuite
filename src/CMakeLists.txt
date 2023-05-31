@@ -82,3 +82,6 @@ endif ()
 
 add_executable(vtable_manip_test vtable_manip_test.cxx)
 target_link_libraries(vtable_manip_test PRIVATE ${AICXX_OBJECTS_LIST})
+
+add_executable(object_tracker_test object_tracker_test.cxx)
+target_link_libraries(object_tracker_test PRIVATE ${AICXX_OBJECTS_LIST})

@@ -1,6 +1,7 @@
 #include "sys.h"
 #include "utils/RandomStream.h"
 #include "utils/StreamHasher.h"
+#include <iomanip>
 #include "debug.h"
 
 int main()
@@ -29,6 +30,8 @@ int main()
   utils::RandomStreamBuf random_streambuf(stream_size, 'A', 'Z');
   hasher << &random_streambuf;
 
-  ASSERT(hasher.digest() == utils::HasherStreamBuf::size_hash_pairs[test_case].hash);
+  auto digest = hasher.digest();
+  Dout(dc::notice, "digest = 0x" << std::hex << digest);
+  ASSERT(digest == utils::HasherStreamBuf::size_hash_pairs[test_case].hash);
   Dout(dc::notice, "Success.");
 }

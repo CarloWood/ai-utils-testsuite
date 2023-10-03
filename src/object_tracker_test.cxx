@@ -7,7 +7,7 @@ struct Node;
 class NodeTracker : public utils::ObjectTracker<Node>
 {
  public:
-  NodeTracker(Node* tracked) : utils::ObjectTracker<Node>(tracked) { }
+  NodeTracker(utils::Badge<utils::TrackedObject<NodeTracker>>, Node* tracked) : utils::ObjectTracker<Node>(tracked) { }
 };
 
 class Node : public utils::TrackedObject<NodeTracker>

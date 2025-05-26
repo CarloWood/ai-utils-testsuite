@@ -26,10 +26,10 @@ struct TestList : public utils::List<T>
   TestList(TestList&& other) : utils::List<T>(std::move(other)) { }
 
   // Copy assignment.
-  TestList& operator=(TestList const& orig) = delete;
-//  {
-//    return static_cast<TestList&>(utils::List<T>::operator=(orig));
-//  }
+  TestList& operator=(TestList const& orig)
+  {
+    return static_cast<TestList&>(utils::List<T>::operator=(orig));
+  }
 
   // Move assignment.
   TestList& operator=(TestList&& orig)
@@ -175,7 +175,7 @@ class ListPair
     return *this;
   }
 
-  ListPair& operator=(ListPair const&& other)
+  ListPair& operator=(ListPair&& other)
   {
     tst_list_ = std::move(other.tst_list_);
     std_list_ = std::move(other.std_list_);
@@ -253,12 +253,89 @@ class ListPair
     };
   }
 
-  IteratorPair insert(ConstIteratorPair pos, size_t count, int const& value)
+  IteratorPair insert(ConstIteratorPair pos, size_t const count, int const& value)
   {
     return {
       tst_list_.insert(pos.tst_iterator_, count, value),
       std_list_.insert(pos.std_iterator_, count, value)
     };
+  }
+
+  template<typename InputIt>
+  IteratorPair insert(ConstIteratorPair pos, InputIt const first, InputIt const last)
+  {
+    return {
+      tst_list_.insert(pos.tst_iterator_, first, last),
+      std_list_.insert(pos.std_iterator_, first, last)
+    };
+  }
+
+  IteratorPair insert(ConstIteratorPair pos, std::initializer_list<int> const ilist)
+  {
+    return {
+      tst_list_.insert(pos.tst_iterator_, ilist),
+      std_list_.insert(pos.std_iterator_, ilist)
+    };
+  }
+
+  std::pair<size_t, size_t> remove(int const& value)
+  {
+    size_t tst_ret = tst_list_.remove(value);
+    size_t std_ret = std_list_.remove(value);
+    EXPECT_EQ(tst_ret, std_ret);
+    return {tst_ret, std_ret};
+  }
+
+  template<typename UnaryPredicate>
+  std::pair<size_t, size_t> remove_if(UnaryPredicate p)
+  {
+    size_t tst_ret = tst_list_.remove_if(p);
+    size_t std_ret = std_list_.remove_if(p);
+    EXPECT_EQ(tst_ret, std_ret);
+    return {tst_ret, std_ret};
+  }
+
+  std::pair<size_t, size_t> unique()
+  {
+    size_t tst_ret = tst_list_.unique();
+    size_t std_ret = std_list_.unique();
+    EXPECT_EQ(tst_ret, std_ret);
+    return {tst_ret, std_ret};
+  }
+
+  template<typename BinaryPredicate>
+  std::pair<size_t, size_t> unique(BinaryPredicate p)
+  {
+    size_t tst_ret = tst_list_.unique(p);
+    size_t std_ret = std_list_.unique(p);
+    EXPECT_EQ(tst_ret, std_ret);
+    return {tst_ret, std_ret};
+  }
+
+  template<typename Compare>
+  void merge(ListPair& other, Compare comp)
+  {
+    tst_list_.merge(other.tst_list_, comp);
+    std_list_.merge(other.std_list_, comp);
+  }
+
+  void reverse() noexcept
+  {
+    tst_list_.reverse();
+    std_list_.reverse();
+  }
+
+  template<typename Compare>
+  void sort(Compare comp)
+  {
+    tst_list_.sort(comp);
+    std_list_.sort(comp);
+  }
+
+  void push_back(int const& value)
+  {
+    tst_list_.push_back(value);
+    std_list_.push_back(value);
   }
 };
 
@@ -607,8 +684,6 @@ TEST_F(ListTest, MoveAssignment)
 
       // Verify that the moved-from list is empty.
       EXPECT_TRUE(list_pair_original.empty());
-
-      // The moved-to list (list_pair_dest) will be verified upon destruction.
     }
   }
 }
@@ -662,120 +737,222 @@ TEST_F(ListTest, InsertFill)
 
 TEST_F(ListTest, InsertRange)
 {
-  list_type lst = {1, 4};
-  std::vector<int> vec = {2, 3, 3, 5};
-  lst.insert(std::next(lst.begin()), vec.begin(), vec.end());
-  std::array<int, 6> expected = {{1, 2, 3, 3, 5, 4}};
-  ASSERT_TRUE(std::equal(lst.begin(), lst.end(), std::begin(expected)));
+  // Possible ranges to insert.
+  std::vector<int> const range = {42, 43, 44, 45, 46};
+
+  for (int size = 0; size <= 5; ++size)
+  {
+    for (int pos = 0; pos <= size; ++pos)
+    {
+      for (int range_size = 0; range_size <= range.size(); ++range_size)
+      {
+        // Create the list.
+        ListPair list_pair(values_.begin(), values_.begin() + size);
+
+        // Get iterator to the insertion position.
+        IteratorPair it_pos = list_pair.nth_element(pos);
+
+        // Perform the insertion.
+        IteratorPair ret_it = list_pair.insert(it_pos, range.begin(), range.begin() + range_size);
+
+        // Verify return iterator.
+        list_pair.verify(ret_it);
+      }
+    }
+  }
 }
 
 TEST_F(ListTest, InsertInitializerList)
 {
-  list_type lst = {1, 4};
-  lst.insert(std::next(lst.begin()), {2, 3});
-  std::array<int, 4> expected = {{1, 2, 3, 4}};
-  ASSERT_TRUE(std::equal(lst.begin(), lst.end(), std::begin(expected)));
+  // Possible initializer lists to insert.
+  std::vector<std::initializer_list<int>> insert_ilists = {
+    {},                  // Empty initializer list.
+    {42},                // Single element.
+    {42, 43},
+    {42, 43, 44},
+    {42, 43, 44, 45},
+    {42, 43, 44, 45, 46}
+  };
+
+  for (int size = 0; size <= 5; ++size)
+  {
+    for (int pos = 0; pos <= size; ++pos)
+    {
+      for (auto const& ilist : insert_ilists)
+      {
+        // Create the list.
+        ListPair list_pair(values_.begin(), values_.begin() + size);
+
+        // Get iterator to the insertion position.
+        IteratorPair it_pos = list_pair.nth_element(pos);
+
+        // Perform the insertion.
+        IteratorPair ret_it = list_pair.insert(it_pos, ilist);
+
+        // Verify return iterator.
+        list_pair.verify(ret_it);
+      }
+    }
+  }
 }
 
 TEST_F(ListTest, Remove)
 {
-  list_type lst = {1, 2, 3, 2, 4, 2};
-  size_t removed = lst.remove(2);
-  ASSERT_EQ(removed, 3);
-  std::array<int, 3> expected = {{1, 3, 4}};
-  ASSERT_TRUE(std::equal(lst.begin(), lst.end(), std::begin(expected)));
+  constexpr int remove_value = 42;
+
+  // Possible test lists
+  std::vector<std::vector<int>> test_lists = {
+    {},                            // Empty list
+    {1},                           // List without remove_value
+    {remove_value},                // List with only remove_value
+    {1, remove_value, 3},          // remove_value in the middle
+    {remove_value, 2, remove_value}, // remove_value at start and middle
+    {1, 2, 3, 4, 5},               // List without remove_value
+    {remove_value, remove_value, remove_value}, // List with only remove_value
+    {1, remove_value, remove_value, 4, remove_value}, // Multiple remove_values
+  };
+
+  for (auto const& elements : test_lists)
+  {
+    // Create the list.
+    ListPair list_pair(elements.begin(), elements.end());
+
+    // Remove the remove_value.
+    [[maybe_unused]] auto removed_count = list_pair.remove(remove_value);
+  }
 }
 
 TEST_F(ListTest, RemoveIf)
 {
-  list_type lst = {1, 2, 3, 4, 5, 6};
-  size_t removed = lst.remove_if([](int n) { return n % 2 == 0; });
-  ASSERT_EQ(removed, 3);
-  int expected[] = {1, 3, 5};
-  ASSERT_TRUE(std::equal(lst.begin(), lst.end(), std::begin(expected)));
+  for (int size = 0; size <= 5; ++size)
+  {
+    // Create two lists.
+    ListPair list_pair0(values_.begin(), values_.begin() + size);
+    ListPair list_pair1(values_.begin(), values_.begin() + size);
+
+    [[maybe_unused]] auto removed0 = list_pair0.remove_if([](int n) { return n % 2 == 0; });
+    [[maybe_unused]] auto removed1 = list_pair1.remove_if([](int n) { return n % 2 == 1; });
+  }
 }
 
 TEST_F(ListTest, Unique)
 {
-  list_type lst = {1, 1, 2, 2, 3, 3};
-  size_t removed = lst.unique();
-  std::array<int, 3> expected = {{1, 2, 3}};
-  ASSERT_EQ(removed, 3);
-  ASSERT_TRUE(std::equal(lst.begin(), lst.end(), std::begin(expected)));
+  // Possible test lists.
+  std::vector<std::vector<int>> test_lists = {
+    {},                           // Empty list
+    {1},                          // Single element
+    {1, 1},                       // Duplicates
+    {1, 1, 2, 2, 3, 3},           // Consecutive duplicates
+    {1, 2, 2, 3, 4, 4, 5},        // Mixed duplicates
+    {1, 2, 3, 4, 5},              // No duplicates
+  };
+
+  for (auto const& elements : test_lists)
+  {
+    // Create the list.
+    ListPair list_pair(elements.begin(), elements.end());
+
+    // Perform unique operation.
+    [[maybe_unused]] auto removed_count = list_pair.unique();
+  }
+
+  for (int e1 = 1; e1 <= 5; ++e1)
+    for (int e2 = 1; e2 <= 5; ++e2)
+      for (int e3 = 1; e3 <= 5; ++e3)
+        for (int e4 = 1; e4 <= 5; ++e4)
+          for (int e5 = 1; e5 <= 5; ++e5)
+          {
+            ListPair list_pair = {e1, e2, e3, e4, e5};
+            [[maybe_unused]] auto removed_count = list_pair.unique();
+          }
 }
 
 TEST_F(ListTest, UniqueWithPredicate)
 {
-  list_type lst = {1, 2, 2, 3, 4, 4, 5};
-  size_t removed = lst.unique([](int a, int b) { return (a % 2) == (b % 2); });
-  ASSERT_EQ(removed, 2);
-  std::array<int, 5> expected = {{1, 2, 3, 4, 5}};
-  ASSERT_TRUE(std::equal(lst.begin(), lst.end(), std::begin(expected)));
+  // Predicate: consider elements equal if they have the same parity (both even or both odd).
+  auto unique_parity = [](int a, int b) { return (a % 2) == (b % 2); };
+
+  // Possible test lists.
+  std::vector<std::vector<int>> test_lists = {
+    {},                           // Empty list
+    {1, 2, 2, 3, 4, 4, 5},        // Mixed duplicates
+    {2, 4, 6, 8},                 // All even numbers
+    {1, 3, 5, 7},                 // All odd numbers
+    {1, 2, 3, 4, 5},              // Alternating even and odd
+  };
+
+  for (auto const& elements : test_lists)
+  {
+    // Create the list.
+    ListPair list_pair(elements.begin(), elements.end());
+
+    // Perform unique operation with predicate.
+    [[maybe_unused]] auto removed_count = list_pair.unique(unique_parity);
+  }
+
+  auto unique_mod3 = [](int a, int b) { return (a % 3) == (b % 3); };
+
+  for (int e1 = 1; e1 <= 5; ++e1)
+    for (int e2 = 1; e2 <= 5; ++e2)
+      for (int e3 = 1; e3 <= 5; ++e3)
+        for (int e4 = 1; e4 <= 5; ++e4)
+          for (int e5 = 1; e5 <= 5; ++e5)
+          {
+            ListPair list_pair = {e1, e2, e3, e4, e5};
+            [[maybe_unused]] auto removed_count = list_pair.unique(unique_mod3);
+          }
 }
 
 TEST_F(ListTest, Merge)
 {
-  list_type lst1 = {1, 3, 5};
-  list_type lst2 = {2, 4, 6};
-  lst1.merge(lst2);
-  std::array<int, 6> expected = {{1, 2, 3, 4, 5, 6}};
-  ASSERT_TRUE(std::equal(lst1.begin(), lst1.end(), std::begin(expected)));
-  check_empty_list(lst2);
-}
+  // Possible test cases.
+  std::vector<std::pair<std::vector<int>, std::vector<int>>> test_cases = {
+    {{}, {}},                            // Both lists empty
+    {{1, 3, 5}, {2, 4, 6}},              // Interleaved elements
+    {{1, 2, 3}, {}},                     // Second list empty
+    {{}, {4, 5, 6}},                     // First list empty
+    {{1, 2, 3}, {4, 5, 6}},              // Non-overlapping ranges
+    {{1}, {2}},                          // Single-element lists
+  };
 
-TEST_F(ListTest, MergeWithComparator)
-{
-  list_type lst1 = {5, 3, 1};
-  list_type lst2 = {6, 4, 2};
-  lst1.merge(lst2, std::greater<int>());
-  std::array<int, 6> expected = {{6, 5, 4, 3, 2, 1}};
-  ASSERT_TRUE(std::equal(lst1.begin(), lst1.end(), std::begin(expected)));
-  check_empty_list(lst2);
+  for (auto const& [elements1, elements2] : test_cases)
+  {
+    // Create the lists.
+    ListPair list_pair1(elements1.begin(), elements1.end());
+    ListPair list_pair2(elements2.begin(), elements2.end());
+
+    // Perform merge operation.
+    list_pair1.merge(list_pair2, std::greater<int>{});
+  }
 }
 
 TEST_F(ListTest, Reverse)
 {
-  list_type lst = {1, 2, 3, 4, 5};
-  lst.reverse();
-  std::array<int, 5> expected = {{5, 4, 3, 2, 1}};
-  ASSERT_TRUE(std::equal(lst.begin(), lst.end(), std::begin(expected)));
-}
+  for (int size = 0; size <= 5; ++size)
+  {
+    // Create the list.
+    ListPair list_pair(values_.begin(), values_.begin() + size);
 
-TEST_F(ListTest, SortEmpty)
-{
-  list_type lst;
-  lst.sort();
-  check_empty_list(lst);
-}
-
-TEST_F(ListTest, SortOne)
-{
-  ListPair list_pair = { 42 };
-  ASSERT_EQ(list_pair.size(), 1);
-  list_pair.sort();
-}
-
-TEST_F(ListTest, SortTwo)
-{
-  ListPair list_pair1 = { 3, 7 };
-  ASSERT_EQ(list_pair1.size(), 2);
-  list_pair1.sort();
-  ListPair list_pair2 = { 7, 3 };
-  list_pair2.sort();
+    // Perform reverse operation.
+    list_pair.reverse();
+  }
 }
 
 TEST_F(ListTest, Sort)
 {
-  list_type lst = {3, 1, 4, 1, 5, 9};
-  lst.sort();
-  std::array<int, 6> expected = {{1, 1, 3, 4, 5, 9}};
-  ASSERT_TRUE(std::equal(lst.begin(), lst.end(), std::begin(expected)));
-}
+  std::vector<int> nums = {1, 2, 3, 4, 5};
+  do
+  {
+    for (int size = 0; size <= 5; ++size)
+    {
+      // Create the list.
+      ListPair list_pair;
+      for (int e = 0; e < size; ++e)
+        list_pair.push_back(nums[e]);
 
-TEST_F(ListTest, SortWithComparator)
-{
-  list_type lst = {3, 1, 4, 1, 5, 9};
-  lst.sort(std::greater<int>());
-  std::array<int, 6> expected = {{9, 5, 4, 3, 1, 1}};
-  ASSERT_TRUE(std::equal(lst.begin(), lst.end(), std::begin(expected)));
+      list_pair.sort(std::greater<int>());
+    }
+  }
+  while (std::next_permutation(nums.begin(), nums.end()));
+
 }

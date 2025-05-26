@@ -23,5 +23,8 @@ endif()
 
 include(AICxxSubmodules)
 
+# Find Google Test package
+find_package(GTest)
+
 add_subdirectory(microbench)
 add_subdirectory(src)

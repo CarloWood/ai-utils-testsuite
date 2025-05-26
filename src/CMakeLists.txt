@@ -85,3 +85,15 @@ target_link_libraries(vtable_manip_test PRIVATE ${AICXX_OBJECTS_LIST})
 
 add_executable(object_tracker_test object_tracker_test.cxx)
 target_link_libraries(object_tracker_test PRIVATE ${AICXX_OBJECTS_LIST})
+
+if (GTest_FOUND)
+add_executable(doubly_linked_list_test doubly_linked_list_test.cxx)
+target_link_libraries(doubly_linked_list_test PRIVATE ${AICXX_OBJECTS_LIST} GTest::GTest GTest::Main)
+target_include_directories(doubly_linked_list_test PRIVATE ${GTEST_INCLUDE_DIRS})
+endif ()
+
+add_executable(merge_sort_test merge_sort_test.cxx)
+target_link_libraries(merge_sort_test PRIVATE ${AICXX_OBJECTS_LIST})
+
+add_executable(to_string to_string.cxx)
+target_link_libraries(to_string PRIVATE ${AICXX_OBJECTS_LIST})

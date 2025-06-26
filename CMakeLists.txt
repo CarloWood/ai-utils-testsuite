@@ -28,3 +28,6 @@ find_package(GTest)
 
 add_subdirectory(microbench)
 add_subdirectory(src)
+
+# We use utils/to_string.h
+add_subdirectory(enchantum)

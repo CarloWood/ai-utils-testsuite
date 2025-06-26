@@ -97,3 +97,6 @@ target_link_libraries(merge_sort_test PRIVATE ${AICXX_OBJECTS_LIST})
 
 add_executable(to_string to_string.cxx)
 target_link_libraries(to_string PRIVATE ${AICXX_OBJECTS_LIST})
+
+add_executable(to_string_enchantum to_string_enchantum.cxx)
+target_link_libraries(to_string_enchantum PRIVATE ${AICXX_OBJECTS_LIST} enchantum::enchantum)

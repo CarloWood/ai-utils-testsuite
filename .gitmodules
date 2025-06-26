@@ -14,3 +14,6 @@
 	path = microbench
 	url = https://github.com/CarloWood/microbench.git
 	branch = master
+[submodule "enchantum"]
+	path = enchantum
+	url = https://github.com/ZXShady/enchantum.git

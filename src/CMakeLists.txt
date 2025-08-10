@@ -100,3 +100,6 @@ target_link_libraries(to_string PRIVATE ${AICXX_OBJECTS_LIST})
 
 add_executable(to_string_enchantum to_string_enchantum.cxx)
 target_link_libraries(to_string_enchantum PRIVATE ${AICXX_OBJECTS_LIST} enchantum::enchantum)
+
+add_executable(is_between is_between.cxx)
+target_link_libraries(is_between PRIVATE ${AICXX_OBJECTS_LIST})

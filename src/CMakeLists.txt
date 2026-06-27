@@ -21,6 +21,9 @@ target_link_libraries(register_test PRIVATE ${AICXX_OBJECTS_LIST})
 add_executable(c_escape_test c_escape_test.cxx)
 target_link_libraries(c_escape_test PRIVATE ${AICXX_OBJECTS_LIST})
 
+add_executable(color_pool_test color_pool_test.cxx)
+target_link_libraries(color_pool_test PRIVATE ${AICXX_OBJECTS_LIST})
+
 add_executable(dictionary_test dictionary_test.cxx)
 target_link_libraries(dictionary_test PRIVATE ${AICXX_OBJECTS_LIST})
 

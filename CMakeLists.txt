@@ -26,6 +26,8 @@ include(AICxxSubmodules)
 # Find Google Test package
 find_package(GTest)
 
+enable_testing()
+
 add_subdirectory(microbench)
 add_subdirectory(src)
 

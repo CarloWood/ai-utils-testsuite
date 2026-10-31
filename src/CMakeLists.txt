@@ -72,6 +72,12 @@ add_executable(object_tracker_test object_tracker_test.cxx)
 target_link_libraries(object_tracker_test PRIVATE ${AICXX_OBJECTS_LIST})
 
 if (GTest_FOUND)
+add_executable(event_loop_test event_loop_test.cxx)
+target_link_libraries(event_loop_test PRIVATE ${AICXX_OBJECTS_LIST} GTest::GTest Threads::Threads)
+add_test(NAME event_loop_test COMMAND event_loop_test)
+# Termination deliberately exercises blocking waits; bound failures at the process level.
+set_tests_properties(event_loop_test PROPERTIES TIMEOUT 30)
+
 add_executable(doubly_linked_list_test doubly_linked_list_test.cxx)
 target_link_libraries(doubly_linked_list_test PRIVATE ${AICXX_OBJECTS_LIST} GTest::GTest GTest::Main)
 target_include_directories(doubly_linked_list_test PRIVATE ${GTEST_INCLUDE_DIRS})

@@ -88,3 +88,6 @@ target_link_libraries(to_string_enchantum PRIVATE ${AICXX_OBJECTS_LIST} enchantu
 
 add_executable(is_between is_between.cxx)
 target_link_libraries(is_between PRIVATE ${AICXX_OBJECTS_LIST})
+
+add_executable(flag_set_test flag_set_test.cxx)
+target_link_libraries(flag_set_test PRIVATE ${AICXX_OBJECTS_LIST} enchantum::enchantum)

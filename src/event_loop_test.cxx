@@ -78,7 +78,8 @@ TEST(EventLoop, RegistrationCapacity)
   EXPECT_THROW((void)loop.watch_fd(sockets[1], Loop::PollEvents::read), std::runtime_error);
   Loop::Event highest{seen.mssbi()};
   loop.notify(highest);
-  EXPECT_EQ(loop.wait_for(1s).events(), highest);
+  loop.wait_for(1s);
+  EXPECT_EQ(loop.result().events(), highest);
 }
 
 // Rejected descriptor registrations must not consume tokens or poison later registration.
@@ -106,30 +107,41 @@ TEST(EventLoop, PendingAndCoalescedNotifications)
   loop.notify(first);
   loop.notify(first);
   loop.notify(second);
-  auto result = loop.wait();
+  loop.wait();
+  auto const& result = loop.result();
+  auto result_events = result.events();
   EXPECT_EQ(result.status(), Status::pending_events);
   EXPECT_EQ(result.events(), first | second);
-  expect_empty(loop.wait_for(0ns), Status::timed_out);
+  loop.wait_for(0ns);
+  expect_empty(result, Status::timed_out);
   loop.notify(first);
-  auto next = loop.wait_for(1s);
+  loop.wait_for(1s);
+  auto& next = loop.result();
   EXPECT_EQ(next.status(), Status::pending_events);
   EXPECT_EQ(next.events(), first);
-  EXPECT_EQ(result.events(), first | second);
+  EXPECT_EQ(result_events, first | second);
 }
 
 // Empty waits respect both relative and absolute deadlines, including expired ones.
 TEST(EventLoop, Timeouts)
 {
   Loop loop;
-  expect_empty(loop.wait_for(0ns), Status::timed_out);
-  expect_empty(loop.wait_for(-1ms), Status::timed_out);
-  expect_empty(loop.wait_until(std::chrono::steady_clock::now() - 1s), Status::timed_out);
-  expect_empty(loop.wait_until(std::chrono::system_clock::now() - 1s), Status::timed_out);
+  loop.wait_for(0ns);
+  auto const& result = loop.result();
+  expect_empty(result, Status::timed_out);
+  loop.wait_for(-1ms);
+  expect_empty(result, Status::timed_out);
+  loop.wait_until(std::chrono::steady_clock::now() - 1s);
+  expect_empty(result, Status::timed_out);
+  loop.wait_until(std::chrono::system_clock::now() - 1s);
+  expect_empty(result, Status::timed_out);
   auto start = std::chrono::steady_clock::now();
-  expect_empty(loop.wait_for(20ms), Status::timed_out);
+  loop.wait_for(20ms);
+  expect_empty(result, Status::timed_out);
   EXPECT_GE(std::chrono::steady_clock::now() - start, 20ms);
   auto deadline = std::chrono::steady_clock::now() + 20ms;
-  expect_empty(loop.wait_until(deadline), Status::timed_out);
+  loop.wait_until(deadline);
+  expect_empty(result, Status::timed_out);
   EXPECT_GE(std::chrono::steady_clock::now(), deadline);
 }
 
@@ -153,7 +165,8 @@ TEST(EventLoop, ConcurrentPublication)
   auto deadline = std::chrono::steady_clock::now() + 2s;
   while (received.count() < count)
   {
-    auto result = loop.wait_until(deadline);
+    loop.wait_until(deadline);
+    auto const& result = loop.result();
     ASSERT_EQ(result.status(), Status::pending_events);
     EXPECT_TRUE((received & result.events()).none());
     for (int i = 0; i < count; ++i)
@@ -161,7 +174,9 @@ TEST(EventLoop, ConcurrentPublication)
         EXPECT_EQ(payloads[i], 100 + i);
     received |= result.events();
   }
-  expect_empty(loop.wait_for(0ns), Status::timed_out);
+  loop.wait_for(0ns);
+  auto const& result = loop.result();
+  expect_empty(result, Status::timed_out);
 }
 
 // Even notifications coalescing onto an already-set bit must publish each
@@ -184,12 +199,14 @@ TEST(EventLoop, CoalescedPublication)
   while (published.load(std::memory_order_relaxed) != count && std::chrono::steady_clock::now() < deadline)
     std::this_thread::yield();
   ASSERT_EQ(published.load(std::memory_order_relaxed), count);
-  auto result = loop.wait_for(1s);
+  loop.wait_for(1s);
+  auto const& result = loop.result();
   ASSERT_EQ(result.status(), Status::pending_events);
   EXPECT_EQ(result.events(), event);
   for (int i = 0; i < count; ++i)
     EXPECT_EQ(payloads[i], 100 + i);
-  expect_empty(loop.wait_for(0ns), Status::timed_out);
+  loop.wait_for(0ns);
+  expect_empty(result, Status::timed_out);
 }
 
 // Exercise all three wait entry points with a producer that publishes after a delay.
@@ -205,7 +222,13 @@ TEST(EventLoop, NotificationWakesWaits)
       std::this_thread::sleep_for(20ms);
       loop.notify(event);
     });
-    auto result = kind == 0 ? loop.wait() : kind == 1 ? loop.wait_for(2s) : loop.wait_until(std::chrono::system_clock::now() + 2s);
+    if (kind == 0)
+      loop.wait();
+    else if (kind == 1)
+      loop.wait_for(2s);
+    else
+      loop.wait_until(std::chrono::system_clock::now() + 2s);
+    auto const& result = loop.result();
     EXPECT_EQ(result.status(), Status::pending_events);
     EXPECT_EQ(result.events(), event);
   }
@@ -219,27 +242,29 @@ TEST(EventLoop, DescriptorReadinessAndSnapshots)
   SocketPair second;
   Loop loop;
   auto a = loop.watch_fd(first[0], Loop::PollEvents::read);
+  auto ai = Loop::index(a);
   auto b = loop.watch_fd(second[0], Loop::PollEvents::read);
+  auto bi = Loop::index(b);
   auto message = loop.watch_event();
   char byte = 'x';
   ASSERT_EQ(::write(first[1], &byte, 1), 1);
   ASSERT_EQ(::write(second[1], &byte, 1), 1);
   loop.notify(message);
-  auto result = loop.wait_for(1s);
+  loop.wait_for(1s);
+  auto const& result = loop.result();
   ASSERT_EQ(result.status(), Status::pending_events);
   ASSERT_EQ(result.events(), a | b | message);
-  EXPECT_EQ(result.fd(a), first[0]);
-  EXPECT_EQ(result.fd(b), second[0]);
-  EXPECT_TRUE(has_event(result.ready_events(a), Loop::ReadyEvents::read));
-  EXPECT_TRUE(has_event(result.ready_events(b), Loop::ReadyEvents::read));
-  auto repeated = loop.wait_for(0ns);
+  EXPECT_EQ(result.fd(ai), first[0]);
+  EXPECT_EQ(result.fd(bi), second[0]);
+  EXPECT_TRUE(has_event(result.ready_events(ai), Loop::ReadyEvents::read));
+  EXPECT_TRUE(has_event(result.ready_events(bi), Loop::ReadyEvents::read));
+  loop.wait_for(0ns);
+  auto const& repeated = loop.result();
   EXPECT_EQ(repeated.events(), a | b);
   ASSERT_EQ(::read(first[0], &byte, 1), 1);
   ASSERT_EQ(::read(second[0], &byte, 1), 1);
-  expect_empty(loop.wait_for(0ns), Status::timed_out);
-  EXPECT_EQ(result.events(), a | b | message);
-  EXPECT_EQ(result.fd(a), first[0]);
-  EXPECT_TRUE(has_event(result.ready_events(a), Loop::ReadyEvents::read));
+  loop.wait_for(0ns);
+  expect_empty(result, Status::timed_out);
 }
 
 // A socket can report read and write together; peer shutdown reports hangup even
@@ -249,20 +274,22 @@ TEST(EventLoop, CombinedReadinessAndHangup)
   SocketPair sockets;
   Loop loop;
   auto event = loop.watch_fd(sockets[0], Loop::PollEvents::read | Loop::PollEvents::write);
-  auto writable = loop.wait_for(1s);
-  ASSERT_EQ(writable.events(), event);
-  EXPECT_TRUE(has_event(writable.ready_events(event), Loop::ReadyEvents::write));
+  auto event_index = Loop::index(event);
+  loop.wait_for(1s);
+  auto const& result = loop.result();
+  ASSERT_EQ(result.events(), event);
+  EXPECT_TRUE(has_event(result.ready_events(event_index), Loop::ReadyEvents::write));
   char byte = 'x';
   ASSERT_EQ(::write(sockets[1], &byte, 1), 1);
-  auto both = loop.wait_for(1s);
-  ASSERT_EQ(both.events(), event);
-  EXPECT_TRUE(has_event(both.ready_events(event), Loop::ReadyEvents::read));
-  EXPECT_TRUE(has_event(both.ready_events(event), Loop::ReadyEvents::write));
+  loop.wait_for(1s);
+  ASSERT_EQ(result.events(), event);
+  EXPECT_TRUE(has_event(result.ready_events(event_index), Loop::ReadyEvents::read));
+  EXPECT_TRUE(has_event(result.ready_events(event_index), Loop::ReadyEvents::write));
   ASSERT_EQ(::shutdown(sockets[1], SHUT_RDWR), 0);
-  auto hungup = loop.wait_for(1s);
-  ASSERT_EQ(hungup.events(), event);
-  EXPECT_TRUE(has_event(hungup.ready_events(event), Loop::ReadyEvents::hangup));
-  EXPECT_TRUE(has_event(hungup.ready_events(event), Loop::ReadyEvents::read));
+  loop.wait_for(1s);
+  ASSERT_EQ(result.events(), event);
+  EXPECT_TRUE(has_event(result.ready_events(event_index), Loop::ReadyEvents::hangup));
+  EXPECT_TRUE(has_event(result.ready_events(event_index), Loop::ReadyEvents::read));
   ASSERT_EQ(::read(sockets[0], &byte, 1), 1);
   EXPECT_EQ(byte, 'x');
   EXPECT_EQ(::read(sockets[0], &byte, 1), 0);
@@ -287,15 +314,16 @@ TEST(EventLoop, TerminationAcknowledgement)
   EXPECT_FALSE(returned.load());
   // A pending notification may win the race with the termination request.
   // Keep waiting until termination is observed rather than assuming scheduling.
-  Loop::WaitResult result;
+  auto const& result = loop.result();
   do
-    result = loop.wait();
+    loop.wait();
   while (result.status() != Status::terminated);
   expect_empty(result, Status::terminated);
   terminator.join();
   EXPECT_TRUE(returned.load());
   loop.notify(event);
-  expect_empty(loop.wait_for(0ns), Status::terminated);
+  loop.wait_for(0ns);
+  expect_empty(result, Status::terminated);
 }
 
 // A termination request also wakes an otherwise idle, indefinitely waiting owner.
@@ -306,7 +334,9 @@ TEST(EventLoop, TerminationWakesBlockedWait)
     std::this_thread::sleep_for(20ms);
     loop.terminate();
   });
-  expect_empty(loop.wait(), Status::terminated);
+  loop.wait();
+  auto const& result = loop.result();
+  expect_empty(result, Status::terminated);
 }
 
 } // namespace

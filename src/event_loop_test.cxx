@@ -122,27 +122,85 @@ TEST(EventLoop, PendingAndCoalescedNotifications)
   EXPECT_EQ(result_events, first | second);
 }
 
-// Empty waits respect both relative and absolute deadlines, including expired ones.
+// Each timeout must replace a known nonempty result, rather than merely preserve
+// default or previously timed-out storage. Positive waits must also honor their delay.
 TEST(EventLoop, Timeouts)
 {
   Loop loop;
-  loop.wait_for(0ns);
+  auto event = loop.watch_event();
   auto const& result = loop.result();
-  expect_empty(result, Status::timed_out);
-  loop.wait_for(-1ms);
-  expect_empty(result, Status::timed_out);
-  loop.wait_until(std::chrono::steady_clock::now() - 1s);
-  expect_empty(result, Status::timed_out);
-  loop.wait_until(std::chrono::system_clock::now() - 1s);
-  expect_empty(result, Status::timed_out);
-  auto start = std::chrono::steady_clock::now();
-  loop.wait_for(20ms);
-  expect_empty(result, Status::timed_out);
-  EXPECT_GE(std::chrono::steady_clock::now() - start, 20ms);
-  auto deadline = std::chrono::steady_clock::now() + 20ms;
-  loop.wait_until(deadline);
-  expect_empty(result, Status::timed_out);
-  EXPECT_GE(std::chrono::steady_clock::now(), deadline);
+  for (int kind = 0; kind < 7; ++kind)
+  {
+    SCOPED_TRACE(kind);
+    loop.notify(event);
+    loop.wait_for(1s);
+    ASSERT_EQ(result.status(), Status::pending_events);
+    ASSERT_EQ(result.events(), event);
+
+    auto start = std::chrono::steady_clock::now();
+    switch (kind)
+    {
+      case 0:
+        loop.wait_for(0ns);
+        break;
+      case 1:
+        loop.wait_for(-1ms);
+        break;
+      case 2:
+        loop.wait_until(std::chrono::steady_clock::now() - 1s);
+        break;
+      case 3:
+        loop.wait_until(std::chrono::system_clock::now() - 1s);
+        break;
+      case 4:
+        loop.wait_for(20ms);
+        break;
+      case 5:
+        loop.wait_until(std::chrono::steady_clock::now() + 20ms);
+        break;
+      case 6:
+        loop.wait_until(std::chrono::system_clock::now() + 20ms);
+        break;
+    }
+    expect_empty(result, Status::timed_out);
+    if (kind >= 4)
+      EXPECT_GE(std::chrono::steady_clock::now() - start, 20ms);
+  }
+}
+
+// An expired deadline still polls pending work; it must not unconditionally
+// return a timeout. Start each case from a checked empty result.
+TEST(EventLoop, ExpiredWaitsConsumePendingNotifications)
+{
+  Loop loop;
+  auto event = loop.watch_event();
+  auto const& result = loop.result();
+  for (int kind = 0; kind < 4; ++kind)
+  {
+    SCOPED_TRACE(kind);
+    loop.wait_for(0ns);
+    expect_empty(result, Status::timed_out);
+    loop.notify(event);
+    switch (kind)
+    {
+      case 0:
+        loop.wait_for(0ns);
+        break;
+      case 1:
+        loop.wait_for(-1ms);
+        break;
+      case 2:
+        loop.wait_until(std::chrono::steady_clock::now() - 1s);
+        break;
+      case 3:
+        loop.wait_until(std::chrono::system_clock::now() - 1s);
+        break;
+    }
+    ASSERT_EQ(result.status(), Status::pending_events);
+    ASSERT_EQ(result.events(), event);
+    loop.wait_for(0ns);
+    expect_empty(result, Status::timed_out);
+  }
 }
 
 // Multiple producers publish independent ordinary payloads through notify's release.
@@ -235,8 +293,8 @@ TEST(EventLoop, NotificationWakesWaits)
 }
 
 // Ready descriptors and notifications share one mask; readiness is level-triggered.
-// Older results must retain their FD metadata after later waits change readiness.
-TEST(EventLoop, DescriptorReadinessAndSnapshots)
+// A retained reference observes the reused result storage after subsequent waits.
+TEST(EventLoop, DescriptorReadinessAndResultReuse)
 {
   SocketPair first;
   SocketPair second;
@@ -265,6 +323,35 @@ TEST(EventLoop, DescriptorReadinessAndSnapshots)
   ASSERT_EQ(::read(second[0], &byte, 1), 1);
   loop.wait_for(0ns);
   expect_empty(result, Status::timed_out);
+}
+
+// Readiness flags must be replaced, not accumulated, even when the same event
+// remains present in consecutive results. Draining input leaves only writable readiness.
+TEST(EventLoop, ReadinessFlagsAreReplaced)
+{
+  SocketPair sockets;
+  Loop loop;
+  auto event = loop.watch_fd(sockets[0], Loop::PollEvents::read | Loop::PollEvents::write);
+  auto index = Loop::index(event);
+  auto const& result = loop.result();
+  for (int iteration = 0; iteration < 3; ++iteration)
+  {
+    SCOPED_TRACE(iteration);
+    char byte = 'x';
+    ASSERT_EQ(::write(sockets[1], &byte, 1), 1);
+    loop.wait_for(1s);
+    ASSERT_EQ(result.status(), Status::pending_events);
+    ASSERT_EQ(result.events(), event);
+    EXPECT_EQ(result.fd(index), sockets[0]);
+    EXPECT_EQ(result.ready_events(index), Loop::ReadyEvents::read | Loop::ReadyEvents::write);
+
+    ASSERT_EQ(::read(sockets[0], &byte, 1), 1);
+    loop.wait_for(1s);
+    ASSERT_EQ(result.status(), Status::pending_events);
+    ASSERT_EQ(result.events(), event);
+    EXPECT_EQ(result.fd(index), sockets[0]);
+    EXPECT_EQ(result.ready_events(index), Loop::ReadyEvents::write);
+  }
 }
 
 // A socket can report read and write together; peer shutdown reports hangup even
